@@ -5,7 +5,7 @@
 
 // ─── Config ───
 const HF_MODEL = 'ullahhafeez321/bert-sentiment-classifier';
-const HF_API_URL = `https://api-inference.huggingface.co/models/${HF_MODEL}`;
+const HF_API_URL = `https://corsproxy.io/?${encodeURIComponent(`https://api-inference.huggingface.co/models/${HF_MODEL}`)}`;
 const MAX_CHARS = 2000;
 const HISTORY_KEY = 'bert_sentiment_history';
 const TOKEN_KEY = 'bert_hf_token';
@@ -172,6 +172,7 @@ async function analyzeSentiment() {
             headers: {
                 'Content-Type': 'application/json',
             },
+            mode: 'cors',
             body: JSON.stringify({ inputs: text }),
         });
 

@@ -157,13 +157,6 @@ async function analyzeSentiment() {
         return;
     }
 
-    const token = getToken();
-    if (!token) {
-        showToast('Please add your Hugging Face API token first.', 'info');
-        toggleApiPanel();
-        return;
-    }
-
     if (isAnalyzing) return;
     isAnalyzing = true;
 
@@ -177,7 +170,6 @@ async function analyzeSentiment() {
         const response = await fetch(HF_API_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ inputs: text }),

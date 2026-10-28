@@ -1,20 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BERT Sentiment Classifier — AI-Powered Text Analysis</title>
-    <meta name="description" content="Analyze the sentiment of any text using a fine-tuned BERT model. Get instant positive or negative predictions with confidence scores.">
+    <meta name="description"
+        content="Analyze the sentiment of any text using a fine-tuned BERT model. Get instant positive or negative predictions with confidence scores.">
     <meta name="author" content="ullahhafeez321">
     <meta property="og:title" content="BERT Sentiment Classifier">
     <meta property="og:description" content="AI-powered sentiment analysis using a fine-tuned BERT transformer model.">
     <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
 </head>
+
 <body>
     <!-- Animated background -->
     <div class="bg-animation">
@@ -35,13 +41,15 @@
                 <div class="logo-group">
                     <div class="logo-icon">
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <path d="M16 2L2 9v14l14 7 14-7V9L16 2z" stroke="url(#logo-grad)" stroke-width="1.5" fill="none"/>
-                            <path d="M16 6L6 11v10l10 5 10-5V11L16 6z" stroke="url(#logo-grad)" stroke-width="1" fill="none" opacity="0.4"/>
-                            <circle cx="16" cy="16" r="4" fill="url(#logo-grad)"/>
+                            <path d="M16 2L2 9v14l14 7 14-7V9L16 2z" stroke="url(#logo-grad)" stroke-width="1.5"
+                                fill="none" />
+                            <path d="M16 6L6 11v10l10 5 10-5V11L16 6z" stroke="url(#logo-grad)" stroke-width="1"
+                                fill="none" opacity="0.4" />
+                            <circle cx="16" cy="16" r="4" fill="url(#logo-grad)" />
                             <defs>
                                 <linearGradient id="logo-grad" x1="0" y1="0" x2="32" y2="32">
-                                    <stop stop-color="#818cf8"/>
-                                    <stop offset="1" stop-color="#c084fc"/>
+                                    <stop stop-color="#818cf8" />
+                                    <stop offset="1" stop-color="#c084fc" />
                                 </linearGradient>
                             </defs>
                         </svg>
@@ -52,12 +60,22 @@
                     </div>
                 </div>
                 <nav class="header-nav">
-                    <a href="https://huggingface.co/ullahhafeez321/bert-sentiment-classifier" target="_blank" rel="noopener" class="nav-link" id="nav-model">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    <a href="https://huggingface.co/ullahhafeez321/bert-sentiment-classifier" target="_blank"
+                        rel="noopener" class="nav-link" id="nav-model">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                            <path d="M2 17l10 5 10-5" />
+                            <path d="M2 12l10 5 10-5" />
+                        </svg>
                         Model
                     </a>
                     <button class="nav-link nav-link-btn" id="btn-api-settings" onclick="toggleApiPanel()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
                         <span class="api-status-dot" id="api-dot"></span>
                         API Key
                     </button>
@@ -70,15 +88,29 @@
             <div class="api-panel-inner glass-card">
                 <div class="api-panel-header">
                     <h3>🔐 API Configuration</h3>
-                    <button class="api-close-btn" onclick="toggleApiPanel()" id="btn-close-api" aria-label="Close">&times;</button>
+                    <button class="api-close-btn" onclick="toggleApiPanel()" id="btn-close-api"
+                        aria-label="Close">&times;</button>
                 </div>
-                <p class="api-desc">Enter your <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener">Hugging Face API token</a> to enable live inference. Your token is stored locally and never shared.</p>
+                <p class="api-desc">Enter your <a href="https://huggingface.co/settings/tokens" target="_blank"
+                        rel="noopener">Hugging Face API token</a> to enable live inference. Your token is stored locally
+                    and never shared.</p>
                 <div class="api-input-group">
                     <div class="api-input-wrap">
-                        <input type="password" id="api-token-input" class="api-input" placeholder="hf_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
-                        <button class="api-toggle-vis" id="btn-toggle-vis" onclick="toggleTokenVisibility()" title="Toggle visibility" aria-label="Toggle token visibility">
-                            <svg id="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            <svg id="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        <input type="password" id="api-token-input" class="api-input"
+                            placeholder="hf_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+                        <button class="api-toggle-vis" id="btn-toggle-vis" onclick="toggleTokenVisibility()"
+                            title="Toggle visibility" aria-label="Toggle token visibility">
+                            <svg id="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            <svg id="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" style="display:none">
+                                <path
+                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
                         </button>
                     </div>
                     <button class="btn btn-primary api-save-btn" id="btn-save-token" onclick="saveToken()">
@@ -101,7 +133,7 @@
                 <br>With One Click
             </h1>
             <p class="hero-subtitle">
-                Paste any text — reviews, tweets, emails, comments — and get instant AI-powered 
+                Paste any text — reviews, tweets, emails, comments — and get instant AI-powered
                 sentiment analysis with confidence scores.
             </p>
         </section>
@@ -111,11 +143,18 @@
             <div class="analyzer-card glass-card">
                 <div class="analyzer-header">
                     <button class="analyzer-tab active" id="tab-analyze" onclick="showAnalyzeTab()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                        </svg>
                         Analyze
                     </button>
                     <button class="analyzer-tab" id="tab-examples" onclick="showExamplesTab()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
                         Try Examples
                     </button>
                 </div>
@@ -123,25 +162,29 @@
                 <!-- Input Area -->
                 <div class="input-area" id="input-area">
                     <div class="textarea-wrap">
-                        <textarea 
-                            id="text-input" 
-                            class="text-input" 
-                            placeholder="Type or paste your text here to analyze its sentiment..."
-                            rows="5"
-                            maxlength="2000"
-                        ></textarea>
+                        <textarea id="text-input" class="text-input"
+                            placeholder="Type or paste your text here to analyze its sentiment..." rows="5"
+                            maxlength="2000"></textarea>
                         <div class="textarea-glow"></div>
                     </div>
                     <div class="input-footer">
                         <span class="char-count" id="char-count">0 / 2,000</span>
                         <div class="input-actions">
                             <button class="btn btn-ghost" id="btn-clear" onclick="clearInput()">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M3 6h18" />
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
                                 Clear
                             </button>
                             <button class="btn btn-primary btn-analyze" id="btn-analyze" onclick="analyzeSentiment()">
                                 <span class="btn-content">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                                    </svg>
                                     <span>Analyze Sentiment</span>
                                 </span>
                                 <span class="btn-loader" id="btn-loader">
@@ -156,27 +199,33 @@
                 <!-- Examples Panel -->
                 <div class="examples-panel" id="examples-panel" style="display:none">
                     <div class="examples-grid">
-                        <button class="example-chip chip-positive" onclick="loadExample(this)" data-text="I absolutely love this product! It exceeded all my expectations and the quality is outstanding. Best purchase I've made all year!">
+                        <button class="example-chip chip-positive" onclick="loadExample(this)"
+                            data-text="I absolutely love this product! It exceeded all my expectations and the quality is outstanding. Best purchase I've made all year!">
                             <span class="chip-emoji">😍</span>
                             <span class="chip-text">Product love</span>
                         </button>
-                        <button class="example-chip chip-negative" onclick="loadExample(this)" data-text="Terrible experience. The customer service was rude, unhelpful, and I waited over an hour on hold. Never shopping here again.">
+                        <button class="example-chip chip-negative" onclick="loadExample(this)"
+                            data-text="Terrible experience. The customer service was rude, unhelpful, and I waited over an hour on hold. Never shopping here again.">
                             <span class="chip-emoji">😤</span>
                             <span class="chip-text">Bad service</span>
                         </button>
-                        <button class="example-chip chip-positive" onclick="loadExample(this)" data-text="What a wonderful day! The weather is perfect and I just got promoted at work. Feeling grateful and excited about what's ahead!">
+                        <button class="example-chip chip-positive" onclick="loadExample(this)"
+                            data-text="What a wonderful day! The weather is perfect and I just got promoted at work. Feeling grateful and excited about what's ahead!">
                             <span class="chip-emoji">🎉</span>
                             <span class="chip-text">Great news</span>
                         </button>
-                        <button class="example-chip chip-negative" onclick="loadExample(this)" data-text="This movie was a complete waste of time. The plot made no sense, the acting was wooden, and the ending was predictable.">
+                        <button class="example-chip chip-negative" onclick="loadExample(this)"
+                            data-text="This movie was a complete waste of time. The plot made no sense, the acting was wooden, and the ending was predictable.">
                             <span class="chip-emoji">👎</span>
                             <span class="chip-text">Movie review</span>
                         </button>
-                        <button class="example-chip chip-positive" onclick="loadExample(this)" data-text="The team delivered an incredible product launch. Innovation, collaboration, and passion made this our most successful quarter ever.">
+                        <button class="example-chip chip-positive" onclick="loadExample(this)"
+                            data-text="The team delivered an incredible product launch. Innovation, collaboration, and passion made this our most successful quarter ever.">
                             <span class="chip-emoji">🚀</span>
                             <span class="chip-text">Team success</span>
                         </button>
-                        <button class="example-chip chip-negative" onclick="loadExample(this)" data-text="I'm really disappointed with the latest update. It broke several features I rely on daily and made the entire app basically unusable.">
+                        <button class="example-chip chip-negative" onclick="loadExample(this)"
+                            data-text="I'm really disappointed with the latest update. It broke several features I rely on daily and made the entire app basically unusable.">
                             <span class="chip-emoji">💔</span>
                             <span class="chip-text">App frustration</span>
                         </button>
@@ -190,7 +239,11 @@
             <div class="results-card glass-card">
                 <div class="results-header">
                     <h2 class="results-title">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
                         Analysis Results
                     </h2>
                     <span class="results-time" id="results-time"></span>
@@ -237,11 +290,17 @@
         <section class="history-section" id="history-section" style="display:none">
             <div class="section-header-row">
                 <h2 class="section-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
                     Recent Analyses
                 </h2>
                 <button class="btn btn-ghost btn-sm" id="btn-clear-history" onclick="clearHistory()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                    </svg>
                     Clear All
                 </button>
             </div>
@@ -258,7 +317,11 @@
                 <div class="feature-card glass-card">
                     <div class="feature-step">01</div>
                     <div class="feature-icon feature-icon-1">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
                     </div>
                     <h3>Input Your Text</h3>
                     <p>Paste any text — reviews, tweets, comments, or emails — up to 2,000 characters.</p>
@@ -266,7 +329,13 @@
                 <div class="feature-card glass-card">
                     <div class="feature-step">02</div>
                     <div class="feature-icon feature-icon-2">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><path d="M22 2L16 8"/><path d="M22 8V2h-6"/></svg>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path d="M12 2a10 10 0 1 0 10 10" />
+                            <path d="M12 6v6l4 2" />
+                            <path d="M22 2L16 8" />
+                            <path d="M22 8V2h-6" />
+                        </svg>
                     </div>
                     <h3>BERT Analyzes</h3>
                     <p>Our fine-tuned BERT transformer processes context-aware embeddings via the Hugging Face API.</p>
@@ -274,7 +343,11 @@
                 <div class="feature-card glass-card">
                     <div class="feature-step">03</div>
                     <div class="feature-icon feature-icon-3">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
                     </div>
                     <h3>Get Results</h3>
                     <p>Receive instant sentiment classification — Positive or Negative — with confidence scores.</p>
@@ -288,22 +361,34 @@
                 <div class="footer-left">
                     <span class="footer-brand">
                         <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-                            <path d="M16 2L2 9v14l14 7 14-7V9L16 2z" stroke="url(#logo-grad-f)" stroke-width="1.5" fill="none"/>
-                            <circle cx="16" cy="16" r="4" fill="url(#logo-grad-f)"/>
-                            <defs><linearGradient id="logo-grad-f" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#818cf8"/><stop offset="1" stop-color="#c084fc"/></linearGradient></defs>
+                            <path d="M16 2L2 9v14l14 7 14-7V9L16 2z" stroke="url(#logo-grad-f)" stroke-width="1.5"
+                                fill="none" />
+                            <circle cx="16" cy="16" r="4" fill="url(#logo-grad-f)" />
+                            <defs>
+                                <linearGradient id="logo-grad-f" x1="0" y1="0" x2="32" y2="32">
+                                    <stop stop-color="#818cf8" />
+                                    <stop offset="1" stop-color="#c084fc" />
+                                </linearGradient>
+                            </defs>
                         </svg>
                         BERT Sentiment Classifier
                     </span>
                 </div>
                 <div class="footer-center">
-                    Built with ❤️ by <a href="https://huggingface.co/ullahhafeez321" target="_blank" rel="noopener">ullahhafeez321</a>
+                    Built with ❤️ by <a href="https://huggingface.co/ullahhafeez321" target="_blank"
+                        rel="noopener">ullahhafeez321</a>
                 </div>
                 <div class="footer-right">
-                    <a href="https://huggingface.co/ullahhafeez321/bert-sentiment-classifier" target="_blank" rel="noopener" class="footer-link">
+                    <a href="https://huggingface.co/ullahhafeez321/bert-sentiment-classifier" target="_blank"
+                        rel="noopener" class="footer-link">
                         🤗 Hugging Face
                     </a>
-                    <a href="https://github.com/ullahhafeez321/Bert_Sentiment_Classifier" target="_blank" rel="noopener" class="footer-link">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <a href="https://github.com/ullahhafeez321/Bert_Sentiment_Classifier" target="_blank" rel="noopener"
+                        class="footer-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        </svg>
                         GitHub
                     </a>
                 </div>
@@ -313,4 +398,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>

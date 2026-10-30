@@ -1,39 +1,43 @@
-# BERT Sentiment Classifier
+# BERT Sentiment Studio — Netlify
 
-A premium, AI-powered sentiment analysis web application built with a fine-tuned BERT transformer model. Analyze the emotional tone of any text instantly.
+A responsive sentiment-analysis website connected to your Hugging Face model:
+`ullahhafeez321/bert-sentiment-classifier`.
 
-🔗 **Live Model**: [ullahhafeez321/bert-sentiment-classifier](https://huggingface.co/ullahhafeez321/bert-sentiment-classifier)
+## Important: enable model inference first
 
-## Features
+The Hugging Face model page currently says that the model is **not deployed by an Inference Provider**. A public model repository does not automatically provide a live prediction API. This project uses a Hugging Face **Inference Endpoint** so predictions run on your actual model. Create/deploy an endpoint for the model in Hugging Face, wait until it is running, and copy its endpoint URL.
 
-- 🧠 **BERT-Powered** — Transformer model for binary sentiment classification
-- ⚡ **Instant Analysis** — Real-time in-browser neural transformer inference
-- 📊 **Confidence Scores** — Visual confidence bars for Positive/Negative predictions
-- 🕒 **Analysis History** — Track and revisit your recent analyses (stored locally)
-- 🎨 **Premium Dark UI** — Glassmorphism design with smooth micro-animations
-- 📱 **Fully Responsive** — Works beautifully on desktop, tablet, and mobile
-- 🔓 **Zero Setup / Zero Tokens** — Works out of the box for all visitors without needing API keys or signups
+Hugging Face guide: https://huggingface.co/docs/inference-endpoints/index
+Your model: https://huggingface.co/ullahhafeez321/bert-sentiment-classifier
 
-## Getting Started
+## Deploy to your existing Netlify site
 
-1. Open the app in your browser (e.g. `http://localhost/` or your live URL)
-2. Type or paste any text into the text box (or click **Try Examples**)
-3. Click **Analyze Sentiment** (or press `Ctrl+Enter`) to get instant AI predictions!
+1. Extract this ZIP.
+2. Copy the contents of the `bert-sentiment-netlify` folder into the root of your existing Netlify site's GitHub repository. Keep your existing repository files backed up first. If it already has a `netlify.toml`, merge the `[build]` and `[functions]` settings rather than blindly replacing it.
+3. Commit and push the changes. Netlify should build and deploy the site.
+4. In Netlify, open **Site configuration → Environment variables** and add:
+   - `HF_ENDPOINT_URL` = your running Hugging Face Inference Endpoint URL
+   - `HF_TOKEN` = a Hugging Face access token with permission to call that endpoint
+5. Trigger a new deploy so the function receives the environment variables.
+6. Open your Netlify website and test a positive and a negative sentence.
 
-## Tech Stack
+## Security
 
-- HTML5, Vanilla CSS3, Modern JavaScript (ES Modules)
-- Transformers.js (In-Browser Neural Transformer Inference)
-- BERT (Bidirectional Encoder Representations from Transformers)
+The Hugging Face token is used only inside the Netlify serverless function. Do not add it to `app.js`, `index.html`, or any public frontend file. Do not commit secrets to GitHub.
 
-## Deploy
+## Local preview
 
-This project is a static site — deploy it anywhere:
+Install Node.js, then from this folder run:
 
-- **Netlify**: Connect your GitHub repo and deploy automatically
-- **Vercel**: Import the repo and deploy with zero config
-- **GitHub Pages**: Enable in repo settings
+```bash
+npm install -g netlify-cli
+netlify dev
+```
 
-## Author
+Set `HF_ENDPOINT_URL` and `HF_TOKEN` in a local `.env` file before running. Do not commit `.env`.
 
-Built with ❤️ by [ullahhafeez321](https://huggingface.co/ullahhafeez321)
+## Notes
+
+- The site does not retrain or modify your model.
+- It requests all class scores where supported by the endpoint and displays the returned labels as configured by the model.
+- If the endpoint returns an error, the website displays the error instead of inventing a prediction.

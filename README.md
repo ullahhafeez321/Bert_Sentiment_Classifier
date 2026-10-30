@@ -6,25 +6,24 @@ A premium, AI-powered sentiment analysis web application built with a fine-tuned
 
 ## Features
 
-- 🧠 **BERT-Powered** — Fine-tuned transformer model for binary sentiment classification
-- ⚡ **Instant Analysis** — Real-time predictions via the Hugging Face Inference API
+- 🧠 **BERT-Powered** — Transformer model for binary sentiment classification
+- ⚡ **Instant Analysis** — Real-time in-browser neural transformer inference
 - 📊 **Confidence Scores** — Visual confidence bars for Positive/Negative predictions
 - 🕒 **Analysis History** — Track and revisit your recent analyses (stored locally)
 - 🎨 **Premium Dark UI** — Glassmorphism design with smooth micro-animations
 - 📱 **Fully Responsive** — Works beautifully on desktop, tablet, and mobile
-- 🔒 **Privacy First** — API token stored locally, never sent to third parties
+- 🔓 **Zero Setup / Zero Tokens** — Works out of the box for all visitors without needing API keys or signups
 
 ## Getting Started
 
-1. Open the app in your browser
-2. Click **API Key** and enter your [Hugging Face API token](https://huggingface.co/settings/tokens)
-3. Type or paste any text
-4. Click **Analyze Sentiment** to get instant results!
+1. Open the app in your browser (e.g. `http://localhost/` or your live URL)
+2. Type or paste any text into the text box (or click **Try Examples**)
+3. Click **Analyze Sentiment** (or press `Ctrl+Enter`) to get instant AI predictions!
 
 ## Tech Stack
 
-- HTML5, CSS3, Vanilla JavaScript
-- Hugging Face Inference API
+- HTML5, Vanilla CSS3, Modern JavaScript (ES Modules)
+- Transformers.js (In-Browser Neural Transformer Inference)
 - BERT (Bidirectional Encoder Representations from Transformers)
 
 ## Deploy

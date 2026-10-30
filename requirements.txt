@@ -1,6 +1,5 @@
 streamlit==1.45.1
 transformers==4.46.3
-torch==2.6.0+cpu
---extra-index-url https://download.pytorch.org/whl/cpu
-safetensors>=0.4.5
-huggingface-hub>=0.26.2,<1.0
+torch==2.6.0
+safetensors
+huggingface-hub<1.0

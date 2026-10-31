@@ -1,321 +1,644 @@
-import os
+
+import streamlit as st
+import torch
+import json
 import re
 import html
-import torch
-import streamlit as st
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-MODEL_ID = os.getenv(
-    "HF_MODEL_ID",
-    "ullahhafeez321/bert-sentiment-classifier"
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    AutoModelForCausalLM
 )
 
-NER_MODEL_ID = os.getenv(
-    "HF_NER_MODEL_ID",
-    "Qwen-NER-Decoder"
-)
-
-@st.cache_resource(show_spinner=False)
-def load_ner_model(model_id: str):
-    """Download and cache the Hugging Face NER model."""
-    ner_pipeline = pipeline("ner", model=model_id, tokenizer=model_id, aggregation_strategy="simple")
-    return ner_pipeline
+# =====================================
+# CONFIGURATION
+# =====================================
 
 st.set_page_config(
-    page_title="BERT Sentiment Studio",
-    page_icon="💬",
-    layout="wide",
-    initial_sidebar_state="collapsed",
+    page_title="NLP Analysis Studio",
+    page_icon="🧠",
+    layout="wide"
 )
+
+SENTIMENT_MODEL = "ullahhafeez321/bert-sentiment-classifier"
+NER_MODEL = "ullahhafeez321/Qwen-NER-Decoder"
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+# =====================================
+# CUSTOM CSS
+# =====================================
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
-:root { color-scheme: dark; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap');
+
 .stApp {
-    background:
-      radial-gradient(ellipse at 12% 0%, rgba(76, 110, 245, .18), transparent 34%),
-      radial-gradient(ellipse at 90% 8%, rgba(20, 184, 166, .12), transparent 30%),
-      #0b1020;
+    background: #0b1020;
     color: #edf2ff;
     font-family: 'DM Sans', sans-serif;
 }
-.block-container { max-width: 1120px; padding-top: 2.2rem; padding-bottom: 3rem; }
-h1,h2,h3 { font-family: 'Manrope', sans-serif !important; letter-spacing: -.035em; }
+
+.block-container {
+    max-width: 1400px;
+    padding-top: 2rem;
+}
+
 .hero {
-    padding: 2rem 2.1rem; border: 1px solid rgba(148,163,184,.2);
-    border-radius: 24px; background: linear-gradient(135deg, rgba(30,41,75,.88), rgba(15,23,42,.88));
-    box-shadow: 0 20px 70px rgba(0,0,0,.22); margin-bottom: 1.3rem;
+    background: linear-gradient(120deg,#172554,#172033,#111827);
+    padding: 35px;
+    border-radius: 20px;
+    border: 1px solid #334155;
+    margin-bottom: 25px;
 }
-.eyebrow { color:#8fb4ff; font-size:.78rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; }
-.hero h1 { font-size: clamp(2.1rem, 5vw, 3.5rem); margin:.35rem 0 .6rem; color:#f8fbff; }
-.hero p { color:#b8c4dc; font-size:1.04rem; max-width:720px; margin:0; line-height:1.65; }
-.pill {
-    display:inline-block; padding:.35rem .7rem; border:1px solid rgba(148,163,184,.25);
-    border-radius:999px; color:#cbd5e1; font-size:.78rem; margin:.8rem .35rem 0 0;
-    background:rgba(15,23,42,.6);
+
+.hero h1 {
+    color: white;
+    font-family: 'Space Grotesk';
+    font-size: 42px;
 }
+
+.hero p {
+    color: #cbd5e1;
+    font-size: 17px;
+}
+
 .panel {
-    border:1px solid rgba(148,163,184,.18); border-radius:20px; padding:1.25rem 1.35rem;
-    background:rgba(15,23,42,.72); box-shadow:0 12px 35px rgba(0,0,0,.12);
+    background: #121a2c;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid #334155;
+    margin-bottom: 15px;
 }
+
 .metric {
-    border:1px solid rgba(148,163,184,.18); border-radius:16px; padding:1rem 1.1rem;
-    background:rgba(30,41,59,.62); min-height:95px;
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
 }
-.metric-label { color:#94a3b8; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; }
-.metric-value { color:#f8fafc; font-family:'Manrope'; font-size:1.35rem; font-weight:800; margin-top:.3rem; }
-.result {
-    border-radius:18px; padding:1.25rem 1.4rem; margin:.5rem 0 1rem;
-    border:1px solid rgba(148,163,184,.25); background:rgba(30,41,59,.68);
+
+.entity {
+    display: inline-block;
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 9px 13px;
+    margin: 5px;
+    color: white;
 }
-.result.positive { border-color:rgba(52,211,153,.45); background:rgba(6,78,59,.25); }
-.result.negative { border-color:rgba(251,113,133,.45); background:rgba(136,19,55,.22); }
-.result-title { font-family:'Manrope'; font-size:1.8rem; font-weight:800; margin:.2rem 0; }
-.small-muted { color:#9caec9; font-size:.88rem; }
-div.stButton > button {
-    border:0; border-radius:12px; padding:.72rem 1.2rem; font-weight:700;
-    background:linear-gradient(100deg,#5277f7,#6957d9); color:white;
-    min-height:3rem; transition:transform .15s ease, filter .15s ease;
+
+.entity-type {
+    color: #93c5fd;
+    font-weight: bold;
+    margin-right: 8px;
 }
-div.stButton > button:hover { filter:brightness(1.12); transform:translateY(-1px); color:white; }
-div[data-testid="stTextArea"] textarea {
-    background:#101a30; color:#f8fafc; border:1px solid #34445f; border-radius:14px;
+
+.stButton > button {
+    background: linear-gradient(90deg,#2563eb,#7c3aed);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    min-height: 48px;
+    font-weight: bold;
 }
-hr { border-color:rgba(148,163,184,.16); }
-footer {visibility:hidden;}
+
+section[data-testid="stSidebar"] {
+    background: #0e1729;
+}
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_resource(show_spinner=False)
-def load_model(model_id: str):
-    """Download and cache the user's original Hugging Face model."""
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForSequenceClassification.from_pretrained(model_id)
+
+# =====================================
+# LOAD BERT ENCODER
+# =====================================
+
+@st.cache_resource
+def load_bert():
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        SENTIMENT_MODEL,
+        token=st.secrets.get("HF_TOKEN", None)
+    )
+
+    model = AutoModelForSequenceClassification.from_pretrained(
+        SENTIMENT_MODEL,
+        token=st.secrets.get("HF_TOKEN", None)
+    )
+
+    model.to(DEVICE)
     model.eval()
+
     return tokenizer, model
 
-def readable_label(raw_label: str) -> str:
-    label = str(raw_label).strip()
-    normalized = re.sub(r"[\s_-]+", "", label).lower()
-    if normalized in {"positive", "pos", "1", "label1"}:
-        return "Positive"
-    if normalized in {"negative", "neg", "0", "label0"}:
-        return "Negative"
-    if "positive" in normalized:
-        return "Positive"
-    if "negative" in normalized:
-        return "Negative"
-    return label.replace("_", " ").title()
 
-def predict(text: str, tokenizer, model, generic_mapping: str):
+# =====================================
+# LOAD QWEN DECODER
+# =====================================
+
+@st.cache_resource
+def load_qwen():
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        NER_MODEL,
+        token=st.secrets.get("HF_TOKEN", None)
+    )
+
+    model = AutoModelForCausalLM.from_pretrained(
+        NER_MODEL,
+        token=st.secrets.get("HF_TOKEN", None),
+        torch_dtype=(
+            torch.float16 if DEVICE == "cuda"
+            else torch.float32
+        )
+    )
+
+    model.to(DEVICE)
+    model.eval()
+
+    if tokenizer.pad_token_id is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    return tokenizer, model
+
+
+# =====================================
+# BERT SENTIMENT PREDICTION
+# =====================================
+
+def predict_sentiment(text):
+
+    tokenizer, model = load_bert()
+
     inputs = tokenizer(
         text,
         return_tensors="pt",
         truncation=True,
-        max_length=512,
-        padding=True,
-    )
+        max_length=512
+    ).to(DEVICE)
+
     with torch.inference_mode():
-        logits = model(**inputs).logits
-        probs = torch.softmax(logits, dim=-1)[0]
 
-    class_id = int(torch.argmax(probs).item())
-    confidence = float(probs[class_id].item())
-    config_labels = getattr(model.config, "id2label", {}) or {}
-    raw_label = config_labels.get(class_id, config_labels.get(str(class_id), f"LABEL_{class_id}"))
-    label = readable_label(raw_label)
+        outputs = model(**inputs)
 
-    # If the model config only contains generic LABEL_0 / LABEL_1 names,
-    # use the selectable binary mapping in the sidebar.
-    if label.lower().replace(" ", "") in {f"label{class_id}", f"class{class_id}"}:
-        if len(probs) == 2:
-            if generic_mapping == "Class 0 = Negative, Class 1 = Positive":
-                label = "Negative" if class_id == 0 else "Positive"
-            else:
-                label = "Positive" if class_id == 0 else "Negative"
+        probabilities = torch.softmax(
+            outputs.logits,
+            dim=-1
+        )[0]
 
-    all_scores = []
-    for idx, score in enumerate(probs.tolist()):
-        raw = config_labels.get(idx, config_labels.get(str(idx), f"LABEL_{idx}"))
-        nice = readable_label(raw)
-        if nice.lower().replace(" ", "") in {f"label{idx}", f"class{idx}"}:
-            if len(probs) == 2:
-                if generic_mapping == "Class 0 = Negative, Class 1 = Positive":
-                    nice = "Negative" if idx == 0 else "Positive"
-                else:
-                    nice = "Positive" if idx == 0 else "Negative"
-            else:
-                nice = f"Class {idx}"
-        all_scores.append((nice, float(score)))
-    return label, confidence, all_scores, class_id
+    prediction = torch.argmax(probabilities).item()
+
+    id2label = model.config.id2label
+
+    raw_label = id2label.get(
+        prediction,
+        id2label.get(str(prediction), f"LABEL_{prediction}")
+    )
+
+    label_upper = str(raw_label).upper()
+
+    if "POS" in label_upper:
+        sentiment = "Positive"
+    elif "NEG" in label_upper:
+        sentiment = "Negative"
+    elif "NEU" in label_upper:
+        sentiment = "Neutral"
+    else:
+        sentiment = str(raw_label)
+
+    scores = []
+
+    for i, score in enumerate(probabilities):
+
+        label = id2label.get(
+            i,
+            id2label.get(str(i), f"LABEL_{i}")
+        )
+
+        scores.append({
+            "label": str(label),
+            "score": float(score)
+        })
+
+    return {
+        "sentiment": sentiment,
+        "confidence": float(probabilities[prediction]),
+        "scores": scores
+    }
+
+
+# =====================================
+# QWEN NER PROMPT
+# =====================================
+
+def create_ner_prompt(text, tokenizer):
+
+    instruction = f"""
+You are a Named Entity Recognition system.
+
+Extract named entities from the following sentence.
+
+Entity types:
+PER = Person
+ORG = Organization
+LOC = Location
+MISC = Miscellaneous
+
+Return ONLY a valid JSON array.
+
+Required format:
+
+[
+  {{"text": "Albert Einstein", "type": "PER"}},
+  {{"text": "Princeton University", "type": "ORG"}}
+]
+
+If no entities are found, return [].
+
+Sentence:
+{text}
+
+Entities:
+"""
+
+    if getattr(tokenizer, "chat_template", None):
+
+        try:
+            return tokenizer.apply_chat_template(
+                [{"role": "user", "content": instruction}],
+                tokenize=False,
+                add_generation_prompt=True
+            )
+        except Exception:
+            pass
+
+    return instruction
+
+
+# =====================================
+# PARSE NER OUTPUT
+# =====================================
+
+def parse_entities(output):
+
+    start = output.find("[")
+
+    if start == -1:
+        return []
+
+    depth = 0
+    in_string = False
+    escaped = False
+
+    for i in range(start, len(output)):
+
+        char = output[i]
+
+        if in_string:
+
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+
+        else:
+
+            if char == '"':
+                in_string = True
+
+            elif char == "[":
+                depth += 1
+
+            elif char == "]":
+
+                depth -= 1
+
+                if depth == 0:
+
+                    try:
+                        data = json.loads(output[start:i+1])
+
+                        if isinstance(data, list):
+                            return [
+                                {
+                                    "text": str(item["text"]).strip(),
+                                    "type": str(item.get("type", "ENTITY")).upper()
+                                }
+                                for item in data
+                                if isinstance(item, dict) and item.get("text")
+                            ]
+
+                    except Exception:
+                        return []
+
+    return []
+
+
+# =====================================
+# QWEN ENTITY EXTRACTION
+# =====================================
+
+def extract_entities(text):
+
+    tokenizer, model = load_qwen()
+
+    prompt = create_ner_prompt(text, tokenizer)
+
+    inputs = tokenizer(
+        prompt,
+        return_tensors="pt",
+        truncation=True,
+        max_length=1024
+    ).to(DEVICE)
+
+    input_length = inputs["input_ids"].shape[1]
+
+    with torch.inference_mode():
+
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=180,
+            do_sample=False,
+            num_beams=1,
+            repetition_penalty=1.05,
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id
+        )
+
+    generated_tokens = outputs[0][input_length:]
+
+    generated_text = tokenizer.decode(
+        generated_tokens,
+        skip_special_tokens=True
+    )
+
+    entities = parse_entities(generated_text)
+
+    return {
+        "entities": entities,
+        "raw_output": generated_text
+    }
+
+
+# =====================================
+# SIDEBAR
+# =====================================
+
+with st.sidebar:
+
+    st.title("🧠 NLP Studio")
+
+    st.caption("Dual Transformer Intelligence")
+
+    st.divider()
+
+    st.markdown("### MODEL 01")
+
+    st.success("BERT Encoder")
+
+    st.caption(SENTIMENT_MODEL)
+
+    st.divider()
+
+    st.markdown("### MODEL 02")
+
+    st.info("Qwen Decoder")
+
+    st.caption(NER_MODEL)
+
+    st.divider()
+
+    st.markdown("### Runtime")
+
+    st.write(f"Device: {DEVICE.upper()}")
+
+    st.caption("Models load on first use.")
+
+
+# =====================================
+# MAIN WEBSITE
+# =====================================
 
 st.markdown("""
 <div class="hero">
-  <div class="eyebrow">Your model · Your predictions</div>
-  <h1>BERT Sentiment Studio</h1>
-  <p>Understand the sentiment behind any sentence or review. This app loads your
-  published BERT classifier directly from Hugging Face and runs predictions on the
-  Streamlit server — no paid Hugging Face Inference Endpoint required.</p>
-  <span class="pill">🤗 Hugging Face model</span>
-  <span class="pill">⚡ Live prediction</span>
-  <span class="pill">🔒 No API token required for a public model</span>
+
+<div style="color:#93c5fd;letter-spacing:3px;font-size:12px;">
+DUAL MODEL LANGUAGE INTELLIGENCE
+</div>
+
+<h1>🧠 NLP Analysis Studio</h1>
+
+<p>
+Analyze sentiment and extract named entities
+using two independently trained Hugging Face models.
+</p>
+
 </div>
 """, unsafe_allow_html=True)
 
-with st.sidebar:
-    st.markdown("### ⚙️ Model settings")
-    st.caption("Model repository")
-    st.code(MODEL_ID, language=None)
-    generic_mapping = st.selectbox(
-        "If the model uses generic LABEL_0 / LABEL_1 names",
-        [
-            "Class 0 = Negative, Class 1 = Positive",
-            "Class 0 = Positive, Class 1 = Negative",
-        ],
-        help="This setting is only used when the model config does not contain readable class names.",
-    )
-    st.markdown("---")
-    st.caption("The model is downloaded once when the app starts, then kept in memory while the app is active.")
 
-left, right = st.columns([1.35, .85], gap="large")
+# =====================================
+# INPUT
+# =====================================
 
-with left:
-    st.markdown("### Analyze a text")
-    st.markdown('<div class="small-muted">Paste a movie review, product review, comment, or sentence below.</div>', unsafe_allow_html=True)
-    def set_positive_example():
-        st.session_state["sentiment_text"] = "The movie was excellent. The acting was brilliant and I enjoyed every minute!"
+st.subheader("Enter Your Text")
 
-    def set_negative_example():
-        st.session_state["sentiment_text"] = "The movie was boring, poorly written, and a complete waste of time."
+text = st.text_area(
+    "Your sentence",
+    placeholder="Example: Albert Einstein worked at Princeton University.",
+    height=140,
+    label_visibility="collapsed"
+)
 
-    def clear_example():
-        st.session_state["sentiment_text"] = ""
+analyze = st.button(
+    "✨ Analyze With Both Models",
+    use_container_width=True
+)
 
-    if "sentiment_text" not in st.session_state:
-        st.session_state["sentiment_text"] = ""
 
-    user_text = st.text_area(
-        "Text to analyze",
-        placeholder="Example: The movie was excellent. The acting was brilliant and I enjoyed every minute!",
-        height=190,
-        label_visibility="collapsed",
-        max_chars=5000,
-        key="sentiment_text",
-    )
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.button("Use positive example", use_container_width=True, on_click=set_positive_example)
-    with c2:
-        st.button("Use negative example", use_container_width=True, on_click=set_negative_example)
-    with c3:
-        st.button("Clear text", use_container_width=True, on_click=clear_example)
-
-    analyze = st.button("✨  Analyze sentiment", type="primary", use_container_width=True)
-
-with right:
-    st.markdown("### How it works")
-    st.markdown("""
-    <div class="panel">
-      <p><b>01 · Input</b><br><span class="small-muted">Enter the text you want to classify.</span></p>
-      <hr>
-      <p><b>02 · Tokenization</b><br><span class="small-muted">Your model's tokenizer converts text into BERT input tokens.</span></p>
-      <hr>
-      <p><b>03 · Prediction</b><br><span class="small-muted">Your fine-tuned BERT model calculates class probabilities.</span></p>
-      <hr>
-      <p><b>04 · Result</b><br><span class="small-muted">See the predicted sentiment and confidence scores.</span></p>
-    </div>
-    """, unsafe_allow_html=True)
+# =====================================
+# RUN BOTH MODELS
+# =====================================
 
 if analyze:
-    if not user_text.strip():
-        st.warning("Please enter some text before running the analysis.")
+
+    if not text.strip():
+
+        st.warning("Please enter some text.")
+
     else:
-        try:
-            with st.spinner("Loading your Hugging Face sentiment model and analyzing the text..."):
-                tokenizer, model = load_model(MODEL_ID)
-                label, confidence, scores, class_id = predict(
-                    user_text.strip(), tokenizer, model, generic_mapping
+
+        sentiment = None
+        ner = None
+
+        sentiment_error = None
+        ner_error = None
+
+        col1, col2 = st.columns(2)
+
+        with st.spinner("Running BERT and Qwen..."):
+
+            try:
+                sentiment = predict_sentiment(text.strip())
+
+            except Exception as e:
+                sentiment_error = str(e)
+
+            try:
+                ner = extract_entities(text.strip())
+
+            except Exception as e:
+                ner_error = str(e)
+
+        # =====================================
+        # SENTIMENT RESULTS
+        # =====================================
+
+        with col1:
+
+            st.subheader("💬 Sentiment Analysis")
+
+            st.caption("BERT · Encoder-only")
+
+            if sentiment_error:
+
+                st.error("Sentiment model failed.")
+                st.exception(Exception(sentiment_error))
+
+            else:
+
+                st.markdown(
+                    f"""
+                    <div class="panel">
+                    <div style="color:#94a3b8;">
+                    PREDICTED SENTIMENT
+                    </div>
+
+                    <div class="metric">
+                    {html.escape(sentiment["sentiment"])}
+                    </div>
+
+                    <p>Confidence:
+                    {sentiment["confidence"]:.2%}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
                 )
 
-            style = "positive" if label.lower() == "positive" else "negative" if label.lower() == "negative" else ""
-            emoji = "😊" if style == "positive" else "🙁" if style == "negative" else "🧠"
-            st.markdown("---")
-            st.markdown("### Sentiment Prediction")
-            st.markdown(
-                f'<div class="result {style}"><div class="small-muted">MODEL PREDICTION</div>'
-                f'<div class="result-title">{emoji} {html.escape(label)}</div>'
-                f'<div class="small-muted">Confidence: {confidence*100:.2f}% · Predicted class index: {class_id}</div></div>',
-                unsafe_allow_html=True,
-            )
-            st.markdown("#### Class probabilities")
-            for score_label, score in scores:
-                st.write(f"**{score_label}** — {score*100:.2f}%")
-                st.progress(score)
-            st.caption("Confidence is the model's softmax probability, not a guarantee that the prediction is correct.")
-        except Exception as exc:
-            st.error("The sentiment model could not be loaded or the prediction failed.")
-            st.code(f"{type(exc).__name__}: {exc}")
-            st.info("Check that the Hugging Face repository is public and contains model weights, config.json, and tokenizer files.")
+                st.markdown("#### Class Probabilities")
 
-st.markdown("---")
-st.markdown("### Named Entity Recognition (NER)")
-st.markdown('<div class="small-muted">Extract entities like persons, organizations, and locations from text.</div>', unsafe_allow_html=True)
+                for item in sorted(
+                    sentiment["scores"],
+                    key=lambda x: x["score"],
+                    reverse=True
+                ):
 
-def set_ner_example():
-    st.session_state["ner_text"] = "Barack Obama was born in Honolulu, Hawaii. He later became the 44th President of the United States."
-
-def clear_ner_example():
-    st.session_state["ner_text"] = ""
-
-if "ner_text" not in st.session_state:
-    st.session_state["ner_text"] = ""
-
-ner_user_text = st.text_area(
-    "Text for NER analysis",
-    placeholder="Example: Apple Inc. was founded by Steve Jobs, Steve Wozniak, and Ronald Wayne.",
-    height=190,
-    label_visibility="collapsed",
-    max_chars=5000,
-    key="ner_text",
-)
-cner1, cner2 = st.columns(2)
-with cner1:
-    st.button("Use NER example", use_container_width=True, on_click=set_ner_example)
-with cner2:
-    st.button("Clear NER text", use_container_width=True, on_click=clear_ner_example)
-
-analyze_ner = st.button("🔍 Analyze Entities", type="primary", use_container_width=True)
-
-if analyze_ner:
-    if not ner_user_text.strip():
-        st.warning("Please enter some text before running NER analysis.")
-    else:
-        try:
-            with st.spinner("Loading NER model and extracting entities..."):
-                ner_pipeline = load_ner_model(NER_MODEL_ID)
-                entities = ner_pipeline(ner_user_text.strip())
-
-            st.markdown("---")
-            st.markdown("### Detected Entities")
-            if entities:
-                for entity in entities:
-                    st.markdown(
-                        f'<div class="result"><div class="small-muted">ENTITY TYPE</div>'
-                        f'<div class="result-title">{html.escape(entity["entity_group"])}</div>'
-                        f'<div class="small-muted">Text: {html.escape(entity["word"])} · Score: {entity["score"]*100:.2f}%</div></div>',
-                        unsafe_allow_html=True,
+                    st.write(
+                        f'{item["label"]}: {item["score"]:.2%}'
                     )
-            else:
-                st.info("No entities detected.")
-        except Exception as exc:
-            st.error("The NER model could not be loaded or the prediction failed.")
-            st.code(f"{type(exc).__name__}: {exc}")
-            st.info("Check that the Hugging Face repository is public and contains model weights, config.json, and tokenizer files.")
 
-st.markdown("---")
+                    st.progress(item["score"])
+
+
+        # =====================================
+        # NER RESULTS
+        # =====================================
+
+        with col2:
+
+            st.subheader("🏷️ Named Entity Recognition")
+
+            st.caption("Qwen · Decoder-only")
+
+            if ner_error:
+
+                st.error("NER model failed.")
+                st.exception(Exception(ner_error))
+
+            else:
+
+                entities = ner["entities"]
+
+                st.markdown(
+                    f"""
+                    <div class="panel">
+                    <div style="color:#94a3b8;">
+                    ENTITIES EXTRACTED
+                    </div>
+
+                    <div class="metric">
+                    {len(entities)}
+                    </div>
+
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                if entities:
+
+                    for entity in entities:
+
+                        st.markdown(
+                            f"""
+                            <span class="entity">
+                            <span class="entity-type">
+                            {html.escape(entity["type"])}
+                            </span>
+                            {html.escape(entity["text"])}
+                            </span>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                    st.markdown("#### Structured Results")
+
+                    st.dataframe(
+                        entities,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+
+                else:
+
+                    st.info("No entities returned.")
+
+                with st.expander("View Qwen raw output"):
+
+                    st.code(ner["raw_output"] or "(empty output)")
+
+
+        # =====================================
+        # ORIGINAL TEXT
+        # =====================================
+
+        st.divider()
+
+        st.subheader("Original Input")
+
+        st.info(text.strip())
+
+        st.caption(
+            "Predictions depend on model training and may not always be correct."
+        )
+
+
+# =====================================
+# FOOTER
+# =====================================
+
+st.divider()
+
 st.markdown(
-    f'<div class="small-muted">Model source: <a href="https://huggingface.co/{html.escape(MODEL_ID)}" target="_blank">Hugging Face · {html.escape(MODEL_ID)}</a>'
-    ' &nbsp; · &nbsp; Built with Streamlit and Transformers</div>',
-    unsafe_allow_html=True,
+    """
+    <div style="text-align:center;color:#64748b;">
+    NLP Analysis Studio |
+    Hugging Face Transformers |
+    Streamlit
+    </div>
+    """,
+    unsafe_allow_html=True
 )

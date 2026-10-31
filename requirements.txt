@@ -1,5 +1,7 @@
-streamlit>=1.36,<2.0
-transformers>=4.45,<5.0
-torch>=2.2
-accelerate>=0.30
-safetensors>=0.4
+streamlit
+torch
+transformers
+peft
+accelerate
+safetensors
+huggingface_hub

@@ -3,12 +3,23 @@ import re
 import html
 import torch
 import streamlit as st
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
 MODEL_ID = os.getenv(
     "HF_MODEL_ID",
     "ullahhafeez321/bert-sentiment-classifier"
 )
+
+NER_MODEL_ID = os.getenv(
+    "HF_NER_MODEL_ID",
+    "Qwen-NER-Decoder"
+)
+
+@st.cache_resource(show_spinner=False)
+def load_ner_model(model_id: str):
+    """Download and cache the Hugging Face NER model."""
+    ner_pipeline = pipeline("ner", model=model_id, tokenizer=model_id, aggregation_strategy="simple")
+    return ner_pipeline
 
 st.set_page_config(
     page_title="BERT Sentiment Studio",
@@ -221,7 +232,7 @@ if analyze:
         st.warning("Please enter some text before running the analysis.")
     else:
         try:
-            with st.spinner("Loading your Hugging Face model and analyzing the text..."):
+            with st.spinner("Loading your Hugging Face sentiment model and analyzing the text..."):
                 tokenizer, model = load_model(MODEL_ID)
                 label, confidence, scores, class_id = predict(
                     user_text.strip(), tokenizer, model, generic_mapping
@@ -230,7 +241,7 @@ if analyze:
             style = "positive" if label.lower() == "positive" else "negative" if label.lower() == "negative" else ""
             emoji = "😊" if style == "positive" else "🙁" if style == "negative" else "🧠"
             st.markdown("---")
-            st.markdown("### Prediction")
+            st.markdown("### Sentiment Prediction")
             st.markdown(
                 f'<div class="result {style}"><div class="small-muted">MODEL PREDICTION</div>'
                 f'<div class="result-title">{emoji} {html.escape(label)}</div>'
@@ -243,7 +254,62 @@ if analyze:
                 st.progress(score)
             st.caption("Confidence is the model's softmax probability, not a guarantee that the prediction is correct.")
         except Exception as exc:
-            st.error("The model could not be loaded or the prediction failed.")
+            st.error("The sentiment model could not be loaded or the prediction failed.")
+            st.code(f"{type(exc).__name__}: {exc}")
+            st.info("Check that the Hugging Face repository is public and contains model weights, config.json, and tokenizer files.")
+
+st.markdown("---")
+st.markdown("### Named Entity Recognition (NER)")
+st.markdown('<div class="small-muted">Extract entities like persons, organizations, and locations from text.</div>', unsafe_allow_html=True)
+
+def set_ner_example():
+    st.session_state["ner_text"] = "Barack Obama was born in Honolulu, Hawaii. He later became the 44th President of the United States."
+
+def clear_ner_example():
+    st.session_state["ner_text"] = ""
+
+if "ner_text" not in st.session_state:
+    st.session_state["ner_text"] = ""
+
+ner_user_text = st.text_area(
+    "Text for NER analysis",
+    placeholder="Example: Apple Inc. was founded by Steve Jobs, Steve Wozniak, and Ronald Wayne.",
+    height=190,
+    label_visibility="collapsed",
+    max_chars=5000,
+    key="ner_text",
+)
+cner1, cner2 = st.columns(2)
+with cner1:
+    st.button("Use NER example", use_container_width=True, on_click=set_ner_example)
+with cner2:
+    st.button("Clear NER text", use_container_width=True, on_click=clear_ner_example)
+
+analyze_ner = st.button("🔍 Analyze Entities", type="primary", use_container_width=True)
+
+if analyze_ner:
+    if not ner_user_text.strip():
+        st.warning("Please enter some text before running NER analysis.")
+    else:
+        try:
+            with st.spinner("Loading NER model and extracting entities..."):
+                ner_pipeline = load_ner_model(NER_MODEL_ID)
+                entities = ner_pipeline(ner_user_text.strip())
+
+            st.markdown("---")
+            st.markdown("### Detected Entities")
+            if entities:
+                for entity in entities:
+                    st.markdown(
+                        f'<div class="result"><div class="small-muted">ENTITY TYPE</div>'
+                        f'<div class="result-title">{html.escape(entity["entity_group"])}</div>'
+                        f'<div class="small-muted">Text: {html.escape(entity["word"])} · Score: {entity["score"]*100:.2f}%</div></div>',
+                        unsafe_allow_html=True,
+                    )
+            else:
+                st.info("No entities detected.")
+        except Exception as exc:
+            st.error("The NER model could not be loaded or the prediction failed.")
             st.code(f"{type(exc).__name__}: {exc}")
             st.info("Check that the Hugging Face repository is public and contains model weights, config.json, and tokenizer files.")
 

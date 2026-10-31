@@ -25,6 +25,9 @@ st.set_page_config(
 
 SENTIMENT_MODEL = "ullahhafeez321/bert-sentiment-classifier"
 NER_ADAPTER = "ullahhafeez321/Qwen-NER-Decoder"
+BASE_MODEL_URL = "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct"
+SENTIMENT_MODEL_URL = f"https://huggingface.co/{SENTIMENT_MODEL}"
+NER_MODEL_URL = f"https://huggingface.co/{NER_ADAPTER}"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -47,71 +50,100 @@ HF_TOKEN = get_hf_token()
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
+    :root { color-scheme: dark; }
     .stApp {
-        background: #0b1020;
-        color: #edf2ff;
+        background:
+            radial-gradient(ellipse at 12% 0%, rgba(37,99,235,.16), transparent 34%),
+            radial-gradient(ellipse at 90% 8%, rgba(124,58,237,.13), transparent 30%),
+            #080d19;
+        color: #e8eefb;
         font-family: 'DM Sans', sans-serif;
     }
     .block-container {
-        max-width: 1400px;
+        max-width: 1440px;
         padding-top: 2rem;
-        padding-bottom: 3rem;
+        padding-bottom: 3.5rem;
     }
+    h1, h2, h3 { font-family: 'Space Grotesk', sans-serif !important; letter-spacing: -.025em; }
     .hero {
-        background: linear-gradient(120deg, #172554, #172033, #111827);
-        padding: 35px;
-        border-radius: 20px;
-        border: 1px solid #334155;
-        margin-bottom: 25px;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(115deg, rgba(23,37,84,.98), rgba(17,24,39,.96) 58%, rgba(49,30,88,.92));
+        padding: clamp(25px, 4vw, 46px);
+        border-radius: 24px;
+        border: 1px solid rgba(148,163,184,.22);
+        margin-bottom: 26px;
+        box-shadow: 0 22px 70px rgba(0,0,0,.24);
     }
-    .hero h1 {
-        color: white;
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 42px;
+    .hero:after {
+        content: '';
+        position: absolute;
+        width: 260px; height: 260px;
+        right: -80px; top: -110px;
+        border-radius: 50%;
+        border: 1px solid rgba(191,219,254,.18);
+        box-shadow: 0 0 0 28px rgba(191,219,254,.025), 0 0 0 58px rgba(191,219,254,.02);
     }
-    .hero p {
-        color: #cbd5e1;
-        font-size: 17px;
+    .eyebrow { color: #93c5fd; letter-spacing: .22em; font-size: 11px; font-weight: 700; }
+    .hero h1 { color: #fff; font-size: clamp(32px, 4vw, 48px); margin: 12px 0 8px 0; }
+    .hero p { color: #cbd5e1; font-size: 16px; max-width: 760px; line-height: 1.7; margin-bottom: 0; }
+    .model-card {
+        background: linear-gradient(145deg, rgba(20,30,51,.96), rgba(13,21,37,.96));
+        border: 1px solid rgba(100,116,139,.28);
+        border-radius: 18px;
+        padding: 21px;
+        min-height: 178px;
+        box-shadow: 0 12px 30px rgba(0,0,0,.12);
     }
+    .model-kicker { color: #94a3b8; font-size: 11px; letter-spacing: .14em; font-weight: 700; }
+    .model-card h3 { color: #f8fafc; font-size: 21px; margin: 9px 0 6px 0; }
+    .model-card p { color: #aab8ce; font-size: 13px; line-height: 1.55; min-height: 40px; }
+    .model-card a { color: #93c5fd !important; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .model-card a:hover { color: #c4b5fd !important; text-decoration: underline; }
     .panel {
-        background: #121a2c;
+        background: linear-gradient(145deg, rgba(18,27,46,.98), rgba(13,21,37,.98));
         padding: 24px;
-        border-radius: 16px;
-        border: 1px solid #334155;
+        border-radius: 18px;
+        border: 1px solid rgba(100,116,139,.3);
         margin-bottom: 15px;
+        box-shadow: 0 12px 30px rgba(0,0,0,.12);
     }
-    .metric {
-        font-size: 32px;
-        font-weight: 700;
-        color: white;
-    }
+    .metric { font-size: 34px; font-weight: 700; color: #fff; margin-top: 5px; }
     .entity {
         display: inline-block;
-        background: #1e293b;
+        background: rgba(30,41,59,.9);
         border: 1px solid #475569;
-        border-radius: 8px;
-        padding: 9px 13px;
-        margin: 5px;
-        color: white;
-    }
-    .entity-type {
-        color: #93c5fd;
-        font-weight: bold;
-        margin-right: 8px;
-    }
-    .stButton > button {
-        background: linear-gradient(90deg, #2563eb, #7c3aed);
-        color: white;
-        border: none;
         border-radius: 10px;
-        min-height: 48px;
-        font-weight: bold;
+        padding: 9px 13px;
+        margin: 5px 5px 5px 0;
+        color: #f8fafc;
     }
-    section[data-testid="stSidebar"] {
-        background: #0e1729;
+    .entity-type { color: #93c5fd; font-size: 11px; font-weight: 800; letter-spacing: .06em; margin-right: 8px; }
+    .stTextArea textarea {
+        background: #101a2d !important;
+        color: #f8fafc !important;
+        border: 1px solid #334155 !important;
+        border-radius: 14px !important;
+        line-height: 1.65;
     }
+    .stTextArea textarea:focus { border-color: #60a5fa !important; box-shadow: 0 0 0 1px #60a5fa !important; }
+    .stButton > button {
+        background: linear-gradient(100deg, #2563eb, #6d4aff);
+        color: white;
+        border: 1px solid rgba(191,219,254,.18);
+        border-radius: 12px;
+        min-height: 50px;
+        font-weight: 700;
+        transition: transform .18s ease, filter .18s ease;
+    }
+    .stButton > button:hover { filter: brightness(1.12); transform: translateY(-1px); color: white; }
+    div[data-testid="stProgressBar"] > div > div { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+    section[data-testid="stSidebar"] { background: #0b1323; border-right: 1px solid rgba(100,116,139,.18); }
+    section[data-testid="stSidebar"] a { color: #93c5fd !important; }
+    div[data-testid="stAlert"] { border-radius: 12px; }
+    .footer { text-align: center; color: #718096; font-size: 12px; padding: 8px 0 0 0; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -391,29 +423,29 @@ def extract_entities(text):
 
 with st.sidebar:
     st.title("🧠 NLP Studio")
-    st.caption("Dual Model Language Intelligence")
+    st.caption("Dual-model language intelligence")
     st.divider()
 
-    st.markdown("### MODEL 01")
-    st.success("BERT Encoder")
-    st.caption(SENTIMENT_MODEL)
+    st.markdown("#### MODEL 01 · SENTIMENT")
+    st.success("BERT · Encoder-only")
+    st.caption("English sentiment classification")
+    st.markdown(f"[Open Hugging Face repository ↗]({SENTIMENT_MODEL_URL})")
 
     st.divider()
-
-    st.markdown("### MODEL 02")
-    st.info("Qwen Decoder · LoRA")
-    st.caption(NER_ADAPTER)
+    st.markdown("#### MODEL 02 · ENTITY EXTRACTION")
+    st.info("Qwen · Decoder-only + LoRA")
+    st.caption("English named entity extraction")
+    st.markdown(f"[Open adapter repository ↗]({NER_MODEL_URL})")
+    st.markdown(f"[Open Qwen base model ↗]({BASE_MODEL_URL})")
 
     st.divider()
-    st.markdown("### Runtime")
-    st.write(f"Device: {DEVICE.upper()}")
-    st.caption("Models load when first used.")
-
+    st.markdown("#### RUNTIME")
+    st.write(f"**Device:** `{DEVICE.upper()}`")
+    st.caption("Models load on first use and are cached for the session.")
     if HF_TOKEN:
         st.caption("Hugging Face token detected.")
     else:
-        st.caption("Public model access is being used.")
-
+        st.caption("Using public Hugging Face model access.")
 
 # ============================================================
 # MAIN WEBSITE
@@ -422,26 +454,59 @@ with st.sidebar:
 st.markdown(
     """
     <div class="hero">
-        <div style="color:#93c5fd;letter-spacing:3px;font-size:12px;">
-            DUAL MODEL LANGUAGE INTELLIGENCE
-        </div>
-        <h1>🧠 NLP Analysis Studio</h1>
+        <div class="eyebrow">DUAL MODEL LANGUAGE INTELLIGENCE</div>
+        <h1>Understand text. Extract meaning.</h1>
         <p>
-            Analyze sentiment and extract named entities using two
-            independently trained Hugging Face models.
+            A two-model NLP workspace that combines sentiment classification
+            with named entity recognition. Each model analyzes your original
+            text independently.
         </p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-st.subheader("Enter Your Text")
+st.markdown("### Your AI models")
+model_col1, model_col2 = st.columns(2, gap="large")
+with model_col1:
+    st.markdown(
+        f"""
+        <div class="model-card">
+            <div class="model-kicker">MODEL 01 · ENCODER-ONLY</div>
+            <h3>💬 BERT Sentiment Classifier</h3>
+            <p>Predicts the sentiment of English text and reports the confidence
+            scores for the available sentiment classes.</p>
+            <a href="{SENTIMENT_MODEL_URL}" target="_blank">Explore model on Hugging Face ↗</a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with model_col2:
+    st.markdown(
+        f"""
+        <div class="model-card">
+            <div class="model-kicker">MODEL 02 · DECODER-ONLY + LORA</div>
+            <h3>🏷️ Qwen NER Decoder</h3>
+            <p>Extracts named entities from English text using a fine-tuned
+            Qwen base model and its LoRA adapter.</p>
+            <a href="{NER_MODEL_URL}" target="_blank">Explore adapter on Hugging Face ↗</a>
+            <span style="color:#64748b; padding:0 7px;">·</span>
+            <a href="{BASE_MODEL_URL}" target="_blank">Base model ↗</a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+st.divider()
+st.markdown("### Try the analyzer")
+st.caption("Enter an English sentence or a short paragraph. Both models receive the same original input.")
 
 text = st.text_area(
-    "Your sentence",
-    placeholder="Example: Albert Einstein worked at Princeton University.",
-    height=140,
+    "Your text",
+    placeholder="Example: Albert Einstein worked at Princeton University in New Jersey.",
+    height=150,
     label_visibility="collapsed",
+    key="analysis_input",
 )
 
 analyze = st.button(
@@ -591,9 +656,12 @@ if analyze:
 
 st.divider()
 st.markdown(
-    """
-    <div style="text-align:center;color:#64748b;">
-        NLP Analysis Studio | Hugging Face Transformers | Streamlit
+    f"""
+    <div class="footer">
+        NLP Analysis Studio &nbsp;·&nbsp; Built with Streamlit and Hugging Face<br>
+        <a href="{SENTIMENT_MODEL_URL}" target="_blank">BERT model</a>
+        &nbsp;·&nbsp;
+        <a href="{NER_MODEL_URL}" target="_blank">Qwen NER adapter</a>
     </div>
     """,
     unsafe_allow_html=True,
